@@ -9,5 +9,6 @@ namespace Yesilcam.REPO.Interfaces
 {
 	public interface ICategoryREPO:IBaseREPO<Category>
 	{
+
 	}
 }

@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -6,6 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Yesilcam.DATA.Concrete;
 using Yesilcam.DATA.Enums;
+using Yesilcam.REPO.Concrete;
 using Yesilcam.REPO.Interfaces;
 using Yesilcam.SERVICE.Models.DTOs;
 using Yesilcam.SERVICE.Models.VMs;
@@ -42,27 +44,45 @@ namespace Yesilcam.SERVICE.Services.MovieService
 
 		public async Task<List<MovieGetVM>> GetAll()
 		{
-			return await _movieREPO.GetAll(x => _mapper.Map<MovieGetVM>(x));
+			var movies = await _movieREPO.GetAll(x => x.Status != Status.Passive);
+			return _mapper.Map<List<MovieGetVM>>(movies);
 		}
 
-		public Task<List<MovieGetVM>> GetAllByCatId(int id)
+		public async Task<List<MovieGetVM>> GetAllByCatId(int id)
 		{
-			throw new NotImplementedException();
+			var movies =await _movieREPO.GetAll(x => x.CategoryId == id);
+			return _mapper.Map<List<MovieGetVM>>(movies);
 		}
 
-		public Task<MovieGetVM> GetById(int id)
+		public async Task<MovieGetVM> GetById(int id)
 		{
-			throw new NotImplementedException();
+			//null kontrolü yapılabilir
+			var movie=await _movieREPO.GetById(id);
+			return _mapper.Map<MovieGetVM>(movie);
 		}
 
-		public Task<MovieGetDetailVM> GetMovieDetailById(int id)
+		public async Task<MovieGetDetailVM> GetMovieDetailById(int id)
 		{
-			throw new NotImplementedException();
+			var movie=await _movieREPO.GetFilteredFirstOrDefault(
+				select:x=>new MovieGetDetailVM
+				{
+					Id = x.Id,
+					Name = x.Name,
+					Image=x.Image,
+					Synopsis = x.Synopsis,
+					PublishDate = x.PublishDate,
+					Duration = x.Duration,
+					CategoryId = x.CategoryId,
+					MovieDetail=_mapper.Map<MovieGetOnlyDetailVM>(x.MovieDetail)
+				},
+				where:x=>x.Status!=Status.Passive && x.Id==id,
+				join: x=>x.Include(y=>y.MovieDetail));
+			return movie;
 		}
 
 		public int Update(MovieCreateDTO model)
 		{
-			throw new NotImplementedException();
+			return _movieREPO.Update(_mapper.Map<Movie>(model));
 		}
 	}
 }
